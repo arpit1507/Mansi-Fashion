@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+{% block scripts %}
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/billing.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div id="container">
+        <div>
+            <form method="post">
+                {% csrf_token %}
+                {{ customer.as_p }}
+                <table>
+                    <thead>
+                        <th></th>
+                        <th>FinalCode</th>
+                        <th>SIZE</th>
+                        <th>Description</th>
+                        <th>MRP</th>
+                    </thead>
+                {% for item in items %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" id="item_{{ item.id }}" name="items" value="{{ item.id }}">
+                        </td>
+                        <td>
+                            <label for="item_{{ item.id }}">{{ item.FinalCode }}</label>
+                        </td>
+                        <td>
+                            <label for="item_{{ item.id }}">{{ item.SIZE }}</label>
+                        </td>
+                        <td>
+                            <label for="item_{{ item.id }}">{{ item.Description }}</label>
+                        </td>
+                        <td>
+                            <label for="item_{{ item.id }}">{{ item.MRP }}</label>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </table>
+                <button type="submit">Add Selected Items to Bill</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/Page.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="Page">
+        <div class="left">
+            <a href="{% url 'billing' %}">
+                <button class="button-54" role="button">New Customer</button>
+            </a>
+        </div>
+        <div class="right">
+            <a href="{% url 'oldcustomer' %}">
+                <button class="button-54" role="button">Old Customer</button>
+            </a>
+        </div>
+    </div>
+{% endblock %}

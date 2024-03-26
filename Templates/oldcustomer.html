@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="https://unpkg.com/@trevoreyre/autocomplete-js/dist/style.css"/>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="col-md-6 mx-auto">
+        <div id="autocomplete" class="autocomplete">
+            <input class="autocomplete-input" placeholder="Enter Customer Number" aria-label="Search for a customer">
+            <ul class="autocomplete-result-list" style="background-color: black;color: aliceblue;"></ul>
+        </div>
+        <div id="details">
+        </div>
+    </div>
+</div>
+<script src="https://unpkg.com/@trevoreyre/autocomplete-js"></script>
+<script>
+    new Autocomplete('#autocomplete', {
+        search: input => {
+            const url = `/get-names/?search=${input}`;
+            return fetch(url)
+                .then(response => response.json())
+                .then(data => data.payload);
+        },
+        renderResult: (result, props) => {
+            // Render each result item
+            return `<li ${props}><div class='wiki-title'>${result.Name}</div></li>`;
+        },
+        onSubmit: result => {
+            // Display the selected customer name in the input field
+            document.querySelector(".autocomplete-input").value = result.Name;
+            // Create label elements
+        let ele1 = document.createElement('label');
+        let ele2 = document.createElement('label');
+        let br = document.createElement('br');
+
+        // Set inner HTML for the labels
+        ele1.innerHTML = `Age: ${result.Age}`;
+        ele2.innerHTML = `Phone Number: ${result['Phone Number']}`;
+
+        // Set styles for the labels
+        ele1.style="color:aliceblue;margin-left: 20px;font-size:30px;";
+        ele2.style="color:aliceblue;margin-left: 20px;font-size:30px;";
+
+        // Append elements to the details container
+        document.querySelector("#details").appendChild(ele1);
+        document.querySelector("#details").appendChild(br);
+        document.querySelector("#details").appendChild(ele2);
+        }
+    });
+</script>
+{% endblock %}

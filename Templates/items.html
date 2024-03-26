@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!--link rel="stylesheet" href="{% static 'css/mystyle.css'}"--->
+</head>
+<body>
+    <h1>
+        Hi Welcome to django Level two
+    </h1>
+    <h1>
+        Access Records:
+    </h1>
+    <div class="django">
+        {% if access_records %}
+        <table>
+            <thead>
+                <th>Discription</th>
+                <th>Seller</th>
+                <th>Code</th>
+                <th>Price</th>
+                <th>Date</th>
+                <th>FinalCode</th>
+            </thead>
+            {% for acc in access_records %}
+            <tr>
+                <td>{{acc.Discription}}</td>
+                <td>{{acc.Seller}}</td>
+                <td>{{acc.Code}}</td>
+                <td>{{acc.Price}}</td>
+                <td>{{acc.Date}}</td>
+                <td>{{acc.FinalCode}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+            <p>No access_records found</p>
+        {% endif %}
+    </div>
+</body>
+</html>
