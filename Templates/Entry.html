@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/Entry.css' %}">
+{% endblock %}
+    
+{% block content %}
+    <div class="container">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input class="button-18" type="submit" class="btn btn-primary" value="Submit">
+            <br>
+            <br>
+            <span id="name">CODE: {{ code }} </span>
+        </form>
+    </div>
+    {% endblock %}

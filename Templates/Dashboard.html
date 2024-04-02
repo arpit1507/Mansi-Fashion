@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/Dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+    {% csrf_token %}
+    <div class="body">
+        <div class="container1">
+            <div class="row" id="1"><label class="Number">{{ pieces }}</label><br><label class="Text">Total No of Pieces</label></div>
+            <div class="row" id="2"><label class="Number">{{ Invested }}</label><br><label class="Text">Total Amount Invested</label></div>
+            <div class="row" id="3"><label class="Number">{{ Margin }}</label><br><label class="Text">Margin Percentage</label></div>
+            <div class="row" id="4"><label class="Number">{{ Customer }}</label><br><label class="Text">Total No of Customers</label></div>
+            <div class="row" id="5"><label class="Number"></label><br><label class="Text">No of Repeat Customers</label></div>
+            <div class="row" id="6"><label class="Number">{{ Pieces }}</label><br><label class="Text">Sold Pieces</label></div>
+        </div>
+        <div class="container2">
+            <div id="chart-container-1"></div>
+            <div id="chart-container-2"></div>
+        </div>
+        <div class="container3">
+            <div id="chart-container-3"></div>
+            <div id="chart-container-4"></div>
+        </div>
+    </div>
+        <script src="https://code.highcharts.com/highcharts.js"></script> 
+        <script>
+            var salesConfig ={{Sales|safe}};
+            var chartConfig = {{chart_config|safe}};
+            Highcharts.chart('chart-container-1', chartConfig);
+            Highcharts.chart('chart-container-2', chartConfig);
+            Highcharts.chart('chart-container-3', salesConfig);
+            Highcharts.chart('chart-container-4', salesConfig);
+        </script>
+    {% endblock %}
