@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse,JsonResponse
-from first_app.models import Cloths,SoldItem,Customer,AppUser
+from first_app.models import Cloths,SoldItem,Customer
 from . import forms
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
@@ -144,29 +144,81 @@ def Billing(request):
 
 #Dashboard Page Code
 def Dashboard(request):
+    # Extract All the Key Values Pair From the Model
     cloths_data = Cloths.objects.all().values()
     customer_data=Customer.objects.all().values()
     SoldItem_data=SoldItem.objects.all().values()
 
-    # Convert the data to a DataFrame
+    # Converting them to Data Frame
     sold_df=pd.DataFrame(list(SoldItem_data))
+    sold_df['PhoneNumber'] = sold_df['PhoneNumber'].astype('int64')
     customer_df = pd.DataFrame(list(customer_data))
+    customer_df['PhoneNumber'] = customer_df['PhoneNumber'].astype('int64')
     cloths_df = pd.DataFrame(list(cloths_data))
-    #print(sum(cloths_df['MRP']))
+
+    #Merging Sold and Customers
+    merged_df = pd.merge(sold_df, customer_df, on='PhoneNumber', how='inner')
+
+    #Converting initial code to Invested Amount
     cloths_df['Invested'] = cloths_df.apply(lambda row: decode_word(row['Code'], row['MRP']), axis=1)
-    #cloths_df.to_csv("/Users/arpitagrawal/Downloads/django_practice/Invetory.csv")
-    margin_precentage=round(sum(cloths_df['Invested'])/sum(cloths_df['MRP'])*100)
-    #cloths_df['COST'] = cloths_df.apply(lambda x: decode_word(x))
+
+    #Margin Percentage KPI
+    margin_precentage=round(sum(cloths_df['MRP']-cloths_df['Invested'])/sum(cloths_df['MRP'])*100)
+
     sold_df['sold_on'] = pd.to_datetime(sold_df['sold_on'])
     sold_df['sold_month'] = sold_df['sold_on'].dt.month
     sold_df['sold_month'] = sold_df['sold_month'].apply(lambda x: calendar.month_name[x])
+
+    #Sales Per Month KPI
     k=sold_df[['MRP','sold_month']].groupby('sold_month',as_index=False).sum()
-    print(k)
     months=k.sold_month.to_list()
     val=k.MRP.to_list()
     data=cloths_df.SIZE.value_counts().to_dict()
     categories = list(data.keys())
     values = list(data.values())
+
+    #Age Group Demographics
+    bins = [15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65]
+    labels = ['15-20', '20-25', '25-30', '30-35', '35-40', '40-45', '45-50', '50-55', '55-60', '60-65']
+    merged_df['Age_Group']=pd.cut(merged_df['Age'], bins=bins, labels=labels, right=False)
+    customer_df['Age_Group'] = pd.cut(customer_df['Age'], bins=bins, labels=labels, right=False)
+    age_group_counts = customer_df['Age_Group'].value_counts(normalize=True) * 100
+    age_group_data = [{'name': group, 'y': round(count,2)} for group, count in age_group_counts.items()]
+
+    #Sale Per Age-Group Demogrphics
+    r=merged_df[['Age_Group','PhoneNumber']].groupby('Age_Group',as_index=False).count().sort_values(by='PhoneNumber',ascending=False).iloc[:5,:]
+    print(r)
+    age_groups=r.Age_Group.tolist()
+    No_of_pieces_sold=r.PhoneNumber.tolist()
+
+    #No of Repeat Customers
+    unique_data = merged_df.drop_duplicates(subset=['sold_on', 'PhoneNumber'])
+
+    # Count the occurrences of each phone number
+    phone_number_counts = unique_data['PhoneNumber'].value_counts()
+
+    filtered_phone_numbers = phone_number_counts[phone_number_counts >= 2]
+    # Print the phone number counts 
+    print()
+
+    # Prepare chart configuration
+    chart_customer_distribution = {
+        'chart': {
+            'type': 'pie',
+            'backgroundColor': 'transparent',
+        },
+        'title': {
+            'text': 'Age Group Percentage Distribution',
+            'style': {
+                'color': 'white'
+            }
+        },
+        'series': [{
+            'name': 'Age Group',
+            'data': age_group_data,
+        }]
+    }
+
     chart_SALES = {
         'chart': {
             'type': 'line',
@@ -193,7 +245,7 @@ def Dashboard(request):
         },
         'yAxis': {
             'title': {
-                'text': 'Quantity',
+                'text': 'Sales(in Rps)',
                 'style': {
                     'color': 'white' 
                 }
@@ -204,6 +256,7 @@ def Dashboard(request):
                 }
             },
             'lineColor': 'white',
+            'color':'white',
             'gridLineColor': 'transparent' 
         },
         'plotOptions': {
@@ -212,7 +265,7 @@ def Dashboard(request):
             }
         },
         'series': [{
-            'name': 'Sizes',
+            'name': 'Months',
             'data': val
         }]
     }
@@ -238,6 +291,7 @@ def Dashboard(request):
                 }
             },
             'lineColor': 'white',
+            'color':'white',
             'gridLineColor': 'transparent' 
         },
         'yAxis': {
@@ -265,7 +319,60 @@ def Dashboard(request):
             'data': values
         }]
     }
-    return render(request, 'Dashboard.html', {'chart_config': chart_config,'Sales':chart_SALES,'Invested':sum(cloths_df['Invested']),'Margin':margin_precentage,'pieces':len(cloths_df),'Customer':len(customer_df),'Pieces':len(sold_df)})
+    percustsales_chart = {
+        'chart': {
+            'type': 'bar',  # Use 'bar' for horizontal bar chart
+            'backgroundColor': 'transparent',
+            'style': {
+                'color': 'white'
+            }
+        },
+        'title': {
+            'text': 'Age-Group vs Pieces Sold',
+            'style': {
+                'color': 'white'
+            }
+        },
+        'xAxis': {
+            'text':'XAXIS',
+            'categories': age_groups, 
+            'title': {
+                'style': {
+                    'color': 'white'
+                }
+            },
+            'labels': {
+                'title':'Age Group',
+                'style': {
+                    'color': 'white'
+                }
+            },
+            'lineColor': 'white',
+            'gridLineColor': 'transparent'
+        },
+        'yAxis': {  # Representing categories on y-axis
+            'labels': {
+                'style': {
+                    'color': 'white'
+                }
+            },
+            'lineColor': 'white',
+            'color': 'white',
+            'gridLineColor': 'transparent'
+        },
+        'plotOptions': {
+            'bar': {
+                'borderColor': 'white',
+                'color':'red'
+            }
+        },
+        'series': [{
+            'name': 'Pieces',
+            'data': No_of_pieces_sold
+        }]
+    }
+
+    return render(request, 'Dashboard.html', {'repeat_customer':len(filtered_phone_numbers),'chart_config': chart_config,'Sales':chart_SALES,'Invested':sum(cloths_df['Invested']),'Margin':margin_precentage,'pieces':len(cloths_df),'Customer':len(customer_df),'Pieces':len(sold_df),'chart_customer_distribution':chart_customer_distribution,'chart':percustsales_chart})
 
 
 def LoginPage(request):
